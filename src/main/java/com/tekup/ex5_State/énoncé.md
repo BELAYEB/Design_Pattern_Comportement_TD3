@@ -1,0 +1,2 @@
+## Énoncé
+Créer un système de gestion de connexion pour une application où un utilisateur peut être dans différents états : Déconnecté, Connecté, et Verrouillé. Chaque état doit avoir des comportements spécifiques pour les actions login(), logout(), et lock(). Par exemple, un utilisateur déconnecté ne peut pas se verrouiller, et un utilisateur verrouillé ne peut se déconnecter qu'après s'être déverrouillé.

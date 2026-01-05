@@ -1,3 +1,286 @@
+# Behavioral Design Patterns - TD3
+
+This project demonstrates five behavioral design patterns commonly used in object-oriented software development. Each pattern is implemented in a separate package with practical examples.
+
+---
+
+## Table of Contents
+
+1. [Strategy Pattern](#1-strategy-pattern)
+2. [Command Pattern](#2-command-pattern)
+3. [Observer Pattern](#3-observer-pattern)
+4. [Chain of Responsibility Pattern](#4-chain-of-responsibility-pattern)
+5. [State Pattern](#5-state-pattern)
+
+---
+
+## 1. Strategy Pattern
+
+**Package:** `com.tekup.ex1_Strategy`
+
+### Purpose
+The Strategy pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable. It lets the algorithm vary independently from the clients that use it.
+
+### Structure
+
+```
+┌─────────────────┐         ┌──────────────────────┐
+│     Sorter      │────────>│   <<interface>>      │
+│   (Context)     │         │    SortStrategy<T>   │
+├─────────────────┤         ├──────────────────────┤
+│ - strategy      │         │ + sort(List<T>)      │
+│ + setStrategy() │         └──────────────────────┘
+│ + sort()        │                    △
+└─────────────────┘                    │
+                           ┌───────────┼───────────┐
+                           │           │           │
+                  ┌────────┴──┐ ┌──────┴─────┐ ┌───┴──────────┐
+                  │SortAscending│SortDescending│ SortByLength │
+                  └────────────┘└─────────────┘└──────────────┘
+```
+
+### Key Components
+
+| Component | Role |
+|-----------|------|
+| `SortStrategy<T>` | Strategy interface defining the sorting contract |
+| `Sorter<T>` | Context class that uses a strategy |
+| `SortAscending` | Concrete strategy for ascending order |
+| `SortDescending` | Concrete strategy for descending order |
+| `SortByLength` | Concrete strategy for sorting by string length |
+
+### Use Cases
+- Multiple algorithms for the same task (sorting, validation, compression)
+- Runtime algorithm switching
+- Avoiding conditional statements for selecting behaviors
+- Isolating algorithm-specific code from business logic
+
+---
+
+## 2. Command Pattern
+
+**Package:** `com.tekup.ex2_Command`
+
+### Purpose
+The Command pattern encapsulates a request as an object, thereby allowing for parameterization of clients with different requests, queuing of requests, and logging of the requests. It also supports undoable operations.
+
+### Structure
+
+```
+┌─────────────────┐         ┌──────────────────────┐
+│  <<interface>>  │         │    ShoppingCard      │
+│    Command      │         │     (Receiver)       │
+├─────────────────┤         ├──────────────────────┤
+│ + execute()     │         │ + addProduct()       │
+└─────────────────┘         │ + removeProduct()    │
+         △                  │ + validateOrder()    │
+         │                  └──────────────────────┘
+         │                            △
+┌────────┼────────────────────────────┤
+│        │                            │
+┌───────┴────────┐  ┌────────────────┴────┐  ┌─────────────────────┐
+│AddProductCommand│  │RemoveProductCommand│  │ValidateOrderCommand│
+├─────────────────┤  ├────────────────────┤  ├─────────────────────┤
+│ - shoppingCard  │  │ - shoppingCard     │  │ - shoppingCard      │
+│ - productName   │  │ - productName      │  │                     │
+└─────────────────┘  └────────────────────┘  └─────────────────────┘
+```
+
+### Key Components
+
+| Component | Role |
+|-----------|------|
+| `Command` | Interface declaring the execution method |
+| `ShoppingCard` | Receiver that performs the actual operations |
+| `AddProductCommand` | Concrete command to add a product |
+| `RemoveProductCommand` | Concrete command to remove a product |
+| `ValidateOrderCommand` | Concrete command to validate an order |
+
+### Use Cases
+- Implementing undo/redo functionality
+- Queuing and scheduling operations
+- Transactional behavior
+- Macro recording (combining multiple commands)
+- Decoupling invoker from receiver
+
+---
+
+## 3. Observer Pattern
+
+**Package:** `com.tekup.ex3_Observer`
+
+### Purpose
+The Observer pattern defines a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically.
+
+### Structure
+
+```
+┌─────────────────────┐              ┌──────────────────────┐
+│      Subject        │              │    <<interface>>     │
+│     (Abstract)      │─────────────>│      Observer        │
+├─────────────────────┤              ├──────────────────────┤
+│ - observers: List   │              │ + update(Order)      │
+│ + addObserver()     │              └──────────────────────┘
+│ + removeObserver()  │                        △
+│ + notifyObservers() │                        │
+└─────────────────────┘            ┌───────────┼───────────┐
+         △                         │           │           │
+         │              ┌──────────┴───┐ ┌─────┴──────┐ ┌───┴────────────┐
+    ┌────┴────┐         │CustomerObserver│ShippingTeam││SupportTeamObserver│
+    │  Order  │         │              ││Observer    ││                   │
+    ├─────────┤         └──────────────┘└────────────┘└───────────────────┘
+    │-orderId │
+    │-status  │
+    │+setStatus()|
+    └─────────┘
+```
+
+### Key Components
+
+| Component | Role |
+|-----------|------|
+| `Subject` | Abstract class managing observer registration and notification |
+| `Observer` | Interface for objects that should be notified of changes |
+| `Order` | Concrete subject that notifies observers when status changes |
+| `CustomerObserver` | Concrete observer representing a customer |
+| `ShippingTeamObserver` | Concrete observer representing the shipping team |
+| `SupportTeamObserver` | Concrete observer representing the support team |
+
+### Use Cases
+- Event handling systems
+- Real-time notifications (order status, stock updates)
+- Model-View-Controller (MVC) architectures
+- Distributed event handling
+- Pub/Sub messaging systems
+
+---
+
+## 4. Chain of Responsibility Pattern
+
+**Package:** `com.tekup.ex4_ChainOfResponsibility`
+
+### Purpose
+The Chain of Responsibility pattern avoids coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. It chains the receiving objects and passes the request along the chain until an object handles it.
+
+### Structure
+
+```
+┌────────────────────┐
+│      Handler       │
+│    (Abstract)      │──────────┐
+├────────────────────┤          │
+│ - nextHandler      │<─────────┘
+│ + setNextHandler() │
+│ + handleRequest()  │
+└────────────────────┘
+         △
+         │
+    ┌────┼──────────────────┐
+    │    │                  │
+┌───┴─────┐  ┌──────────┐  ┌┴────────┐
+│Technician│  │Supervisor│  │ Manager │
+├──────────┤  ├──────────┤  ├─────────┤
+│handleReq()│ │handleReq()│ │handleReq()|
+└──────────┘  └──────────┘  └─────────┘
+
+Request Flow:
+┌─────────┐    ┌──────────┐    ┌──────────┐    ┌─────────┐
+│ Request │───>│Technician│───>│Supervisor│───>│ Manager │
+└─────────┘    └──────────┘    └──────────┘    └─────────┘
+```
+
+### Key Components
+
+| Component | Role |
+|-----------|------|
+| `Handler` | Abstract class defining the chain structure and handling interface |
+| `Request` | Object containing request type and description |
+| `Technician` | Handles technical requests |
+| `Supervisor` | Handles supervisor-level requests |
+| `Manager` | Handles management-level requests |
+
+### Use Cases
+- Event bubbling in UI frameworks
+- Middleware pipelines (authentication, logging, validation)
+- Approval workflows (expense approvals, leave requests)
+- Help desk ticket escalation
+- Exception handling chains
+
+---
+
+## 5. State Pattern
+
+**Package:** `com.tekup.ex5_State`
+
+### Purpose
+The State pattern allows an object to alter its behavior when its internal state changes. The object will appear to change its class.
+
+### Structure
+
+```
+┌─────────────────┐         ┌──────────────────────┐
+│   UserContext   │────────>│    <<interface>>     │
+│    (Context)    │         │      UserState       │
+├─────────────────┤         ├──────────────────────┤
+│ - state         │         │ + login(UserContext) │
+│ - username      │         │ + logout(UserContext)|
+│ + setState()    │         │ + lock(UserContext)  │
+│ + login()       │         └──────────────────────┘
+│ + logout()      │                    △
+│ + lock()        │                    │
+└─────────────────┘         ┌──────────┼──────────┐
+                            │          │          │
+                   ┌────────┴───┐ ┌────┴─────┐ ┌───┴────────┐
+                   │Disconnected│ │Connected │ │LockedState │
+                   │   State    │ │  State   │ │            │
+                   └────────────┘ └──────────┘ └────────────┘
+```
+
+### State Transitions
+
+```
+                    login()
+    ┌───────────────────────────────────────┐
+    │                                       ▼
+┌───┴──────────┐     lock()      ┌───────────────┐
+│  Connected   │────────────────>│    Locked     │
+└──────────────┘                 └───────────────┘
+    │                                   │
+    │ logout()                          │ login()
+    ▼                                   ▼
+┌──────────────┐                 ┌───────────────┐
+│ Disconnected │<────────────────│    Locked     │
+└──────────────┘     logout()    └───────────────┘
+```
+
+### Key Components
+
+| Component | Role |
+|-----------|------|
+| `UserState` | Interface defining state-dependent behaviors |
+| `UserContext` | Context class maintaining the current state |
+| `ConnectedState` | State when user is logged in |
+| `DisconnectedState` | State when user is logged out |
+| `LockedState` | State when user account is locked |
+
+### Use Cases
+- User session management (connected, disconnected, locked)
+- Order lifecycle (pending, processing, shipped, delivered)
+- Media player controls (playing, paused, stopped)
+- Document workflow (draft, review, published)
+- TCP connection states
+
+---
+
+## Summary Comparison
+
+| Pattern | Intent | Key Benefit |
+|---------|--------|-------------|
+| **Strategy** | Encapsulate interchangeable algorithms | Runtime algorithm switching |
+| **Command** | Encapsulate requests as objects | Decouple invoker from receiver |
+| **Observer** | One-to-many dependency notification | Loose coupling between subjects and observers |
+| **Chain of Responsibility** | Pass request along a chain of handlers | Decouple sender from receiver |
+| **State** | Alter behavior based on internal state | Eliminate state-based conditionals |
 
 ---
 
@@ -5,377 +288,32 @@
 
 ```
 src/main/java/com/tekup/
-├── ex1_Strategy/
-│   ├── Main_ex1_Strategy.java      # Demo of Strategy pattern
-│   ├── SortStrategy.java           # Strategy interface
-│   ├── Sorter.java                 # Context class
-│   ├── SortAscending.java          # Concrete strategy
-│   ├── SortDescending.java         # Concrete strategy
-│   └── SortByLength.java           # Concrete strategy
-│
-├── ex2_Command/
-│   ├── Main_ex2_Command.java       # Demo of Command pattern
-│   ├── Command.java                # Command interface
-│   ├── ShoppingCard.java           # Receiver
-│   ├── AddProductCommand.java      # Concrete command
-│   ├── RemoveProducCommand.java    # Concrete command
-│   └── ValidateOrderCommand.java   # Concrete command
-│
-├── ex3_Observer/
-│   ├── Main_ex3_Observer.java      # Demo of Observer pattern
-│   ├── Subject.java                # Abstract subject
-│   ├── Order.java                  # Concrete subject
-│   ├── Observer.java               # Observer interface
-│   ├── CustomerObserver.java       # Concrete observer
-│   ├── ShippingTeamObserver.java   # Concrete observer
-│   └── SupportTeamObserver.java    # Concrete observer
-│
-└── ex4_ChainOfResponsibility/
-    ├── Main_ex4_ChainOfResponsibility.java  # Demo of Chain pattern
-    ├── Handler.java                # Abstract handler
-    ├── Request.java                # Request object
-    ├── Technician.java             # Concrete handler
-    ├── Supervisor.java             # Concrete handler
-    └── Manager.java                # Concrete handler
+├── ex1_Strategy/           # Strategy Pattern
+├── ex2_Command/            # Command Pattern
+├── ex3_Observer/           # Observer Pattern
+├── ex4_ChainOfResponsibility/  # Chain of Responsibility Pattern
+└── ex5_State/              # State Pattern
 ```
 
 ---
 
 ## How to Run
 
-### Prerequisites
-- Java 8 or higher
-- Maven 3.x
-
-### Compile the Project
-```bash
-mvn clean compile
-```
-
-### Run All Examples
-```bash
-# Strategy Pattern
-mvn exec:java -Dexec.mainClass="com.tekup.ex1_Strategy.Main_ex1_Strategy"
-
-# Command Pattern
-mvn exec:java -Dexec.mainClass="com.tekup.ex2_Command.Main_ex2_Command"
-
-# Observer Pattern
-mvn exec:java -Dexec.mainClass="com.tekup.ex3_Observer.Main_ex3_Observer"
-
-# Chain of Responsibility Pattern
-mvn exec:java -Dexec.mainClass="com.tekup.ex4_ChainOfResponsibility.Main_ex4_ChainOfResponsibility"
-```
-
-### Package the Project
-```bash
-mvn package
-```
+1. Ensure you have Java 8+ and Maven installed
+2. Build the project:
+   ```bash
+   mvn clean compile
+   ```
+3. Run individual examples from each package's `Main_ex*` class
 
 ---
 
-## Requirements
+## References
 
-- **Java Version:** 8 or higher
-- **Build Tool:** Apache Maven 3.x
-- **IDE (Optional):** IntelliJ IDEA, Eclipse, or VS Code with Java extensions
-
----
-
-## Key Takeaways
-
-### Design Pattern Comparison
-
-| Pattern | Purpose | Key Characteristic | Real-World Example |
-|---------|---------|-------------------|-------------------|
-| **Strategy** | Define family of algorithms | Interchangeable behaviors | Payment methods (Credit Card, PayPal, Cash) |
-| **Command** | Encapsulate requests as objects | Queuing & undo operations | Remote control, Transaction system |
-| **Observer** | One-to-many notification | Automatic updates | Newsletter subscriptions, Event listeners |
-| **Chain of Responsibility** | Pass request along chain | Decoupled request handling | Support ticket escalation, Logging levels |
-
-### Benefits of Behavioral Patterns
-
-1. **Flexibility:** Easy to add new behaviors without modifying existing code
-2. **Maintainability:** Clear separation of concerns
-3. **Reusability:** Components can be reused in different contexts
-4. **Loose Coupling:** Objects interact without tight dependencies
-5. **Open/Closed Principle:** Open for extension, closed for modification
+- **Gang of Four (GoF)**: *Design Patterns: Elements of Reusable Object-Oriented Software*
+- **Head First Design Patterns** by Eric Freeman & Elisabeth Robson
 
 ---
 
-## Additional Resources
-
-- **Design Patterns Book:** "Design Patterns: Elements of Reusable Object-Oriented Software" by Gang of Four
-- **Refactoring Guru:** [refactoring.guru/design-patterns](https://refactoring.guru/design-patterns)
-- **Source Making:** [sourcemaking.com/design_patterns](https://sourcemaking.com/design_patterns)
-
----
-
-## License
-
-This project is created for educational purposes as part of TD3 coursework.
-
----
-
-## Author
-
-**Course:** Design Patterns (Behavioral Patterns)
-**Institution:** TEK-UP University
-**Date:** January 2026
-# Behavioral Design Patterns - TD3
-
-This project demonstrates the implementation of four fundamental **Behavioral Design Patterns** in Java. Each pattern is organized in its own package with complete working examples.
-
-## 📋 Table of Contents
-- [Project Overview](#project-overview)
-- [Design Patterns Implemented](#design-patterns-implemented)
-  - [1. Strategy Pattern](#1-strategy-pattern)
-  - [2. Command Pattern](#2-command-pattern)
-  - [3. Observer Pattern](#3-observer-pattern)
-  - [4. Chain of Responsibility Pattern](#4-chain-of-responsibility-pattern)
-- [Project Structure](#project-structure)
-- [How to Run](#how-to-run)
-- [Requirements](#requirements)
-
----
-
-## Project Overview
-
-Behavioral design patterns are concerned with algorithms and the assignment of responsibilities between objects. They help in defining how objects interact and communicate with each other in a way that increases flexibility in carrying out communication.
-
-This project provides practical implementations of four key behavioral patterns with real-world scenarios.
-
----
-
-## Design Patterns Implemented
-
-### 1. Strategy Pattern
-**Package:** `com.tekup.ex1_Strategy`
-
-#### Purpose
-The Strategy pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable. It lets the algorithm vary independently from clients that use it.
-
-#### Problem Solved
-When you have multiple ways to perform an operation (e.g., different sorting algorithms), you want to:
-- Avoid multiple conditional statements
-- Make algorithms interchangeable at runtime
-- Add new algorithms without modifying existing code
-
-#### Components
-- **`SortStrategy<T>`** (Interface): Defines the contract for all sorting strategies
-- **`Sorter<T>`** (Context): Maintains a reference to a Strategy object and delegates the sorting operation
-- **Concrete Strategies:**
-  - `SortAscending`: Sorts integers in ascending order
-  - `SortDescending`: Sorts integers in descending order
-  - `SortByLength`: Sorts strings by their length
-
-#### How It Works
-```
-Client → Sorter (Context) → SortStrategy (Interface) ← Concrete Strategies
-```
-
-#### Usage Example
-```java
-Sorter<Integer> sorter = new Sorter<>();
-List<Integer> numbers = Arrays.asList(5, 2, 8, 1, 4);
-
-// Switch strategies at runtime
-sorter.setStrategy(new SortAscending());
-sorter.sort(numbers);  // [1, 2, 4, 5, 8]
-
-sorter.setStrategy(new SortDescending());
-sorter.sort(numbers);  // [8, 5, 4, 2, 1]
-```
-
-#### When to Use
-- When you have multiple algorithms for a specific task
-- When you want to avoid exposing complex algorithm-specific data structures
-- When you need to switch between different behaviors at runtime
-
-#### Run the Example
-```bash
-mvn compile
-mvn exec:java -Dexec.mainClass="com.tekup.ex1_Strategy.Main_ex1_Strategy"
-```
-
----
-
-### 2. Command Pattern
-**Package:** `com.tekup.ex2_Command`
-
-#### Purpose
-The Command pattern encapsulates a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations.
-
-#### Problem Solved
-When you need to:
-- Decouple the object that invokes the operation from the one that knows how to perform it
-- Queue operations for later execution
-- Support undo/redo functionality
-- Log changes so that they can be reapplied in case of a system crash
-
-#### Components
-- **`Command`** (Interface): Declares the execute method
-- **`ShoppingCard`** (Receiver): The object that performs the actual work
-- **Concrete Commands:**
-  - `AddProductCommand`: Adds a product to the shopping cart
-  - `RemoveProducCommand`: Removes a product from the shopping cart
-  - `ValidateOrderCommand`: Validates the order
-
-#### How It Works
-```
-Client → Command (Interface) → Concrete Commands → Receiver (ShoppingCard)
-```
-
-#### Usage Example
-```java
-ShoppingCard cart = new ShoppingCard();
-
-Command addLaptop = new AddProductCommand(cart, "Laptop");
-Command addPhone = new AddProductCommand(cart, "Smartphone");
-Command removeItem = new RemoveProducCommand(cart, "Laptop");
-Command validate = new ValidateOrderCommand(cart);
-
-// Execute commands
-addLaptop.execute();    // Added product Laptop
-addPhone.execute();     // Added product Smartphone
-removeItem.execute();   // Removed product Laptop
-validate.execute();     // Validating order
-```
-
-#### When to Use
-- When you need to parameterize objects with operations
-- When you need to queue operations for later execution
-- When you want to support undo/redo operations
-- When you want to log operations for auditing or recovery
-
-#### Run the Example
-```bash
-mvn compile
-mvn exec:java -Dexec.mainClass="com.tekup.ex2_Command.Main_ex2_Command"
-```
-
----
-
-### 3. Observer Pattern
-**Package:** `com.tekup.ex3_Observer`
-
-#### Purpose
-The Observer pattern defines a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically.
-
-#### Problem Solved
-When you need to:
-- Maintain consistency between related objects without making them tightly coupled
-- Notify multiple objects about state changes
-- Add or remove observers dynamically at runtime
-
-#### Components
-- **`Subject`** (Abstract Class): Manages observers and provides notification mechanism
-- **`Order`** (Concrete Subject): Extends Subject and maintains state (order status)
-- **`Observer`** (Interface): Defines the update method for observers
-- **Concrete Observers:**
-    - `CustomerObserver`: Notifies customers about order status changes
-    - `ShippingTeamObserver`: Notifies shipping team about order updates
-    - `SupportTeamObserver`: Notifies support team about order events
-
-#### How It Works
-```
-Order (Subject) → notifies → Multiple Observers
-                             ├── CustomerObserver
-                             ├── ShippingTeamObserver
-                             └── SupportTeamObserver
-```
-
-#### Usage Example
-```java
-Order order = new Order("CMD-001");
-
-// Register observers
-order.addObserver(new CustomerObserver("Mahmoud"));
-order.addObserver(new ShippingTeamObserver());
-order.addObserver(new SupportTeamObserver());
-
-// Change state - all observers are automatically notified
-order.setStatus("CONFIRMÉE");  // All 3 observers notified
-order.setStatus("EXPÉDIÉE");   // All 3 observers notified
-order.setStatus("LIVRÉE");     // All 3 observers notified
-```
-
-#### When to Use
-- When changes to one object require changing others
-- When an object should notify other objects without making assumptions about who they are
-- When you need a publish-subscribe model
-- When you want loose coupling between interacting objects
-
-#### Run the Example
-```bash
-mvn compile
-mvn exec:java -Dexec.mainClass="com.tekup.ex3_Observer.Main_ex3_Observer"
-```
-
----
-
-### 4. Chain of Responsibility Pattern
-**Package:** `com.tekup.ex4_ChainOfResponsibility`
-
-#### Purpose
-The Chain of Responsibility pattern avoids coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. It chains the receiving objects and passes the request along the chain until an object handles it.
-
-#### Problem Solved
-When you need to:
-- Decouple request senders from receivers
-- Allow multiple objects to handle a request without the sender knowing which object will ultimately handle it
-- Add or modify handlers dynamically
-- Avoid hard-wiring the request handling logic
-
-#### Components
-- **`Handler`** (Abstract Class): Defines interface for handling requests and maintains reference to next handler
-- **`Request`**: Encapsulates request information (type and description)
-- **Concrete Handlers:**
-    - `Technician`: Handles "technical" requests
-    - `Supervisor`: Handles "supervisory" requests
-    - `Manager`: Handles "managerial" requests
-
-#### How It Works
-```
-Request → Technician → Supervisor → Manager → (No handler)
-          (checks)     (checks)     (checks)
-```
-
-Each handler:
-1. Checks if it can handle the request
-2. If yes, processes it
-3. If no, passes it to the next handler in the chain
-
-#### Usage Example
-```java
-// Build the chain
-Handler technician = new Technician();
-Handler supervisor = new Supervisor();
-Handler manager = new Manager();
-
-technician.setNextHandler(supervisor);
-supervisor.setNextHandler(manager);
-
-// Send requests through the chain
-technician.handleRequest(new Request("technical", "Network issue"));
-// Output: Technician is handling the request: Network issue
-
-technician.handleRequest(new Request("managerial", "Budget approval"));
-// Output: Manager is handling the request: Budget approval
-
-technician.handleRequest(new Request("other", "Unknown request"));
-// Output: No handler available for the request: Unknown request
-```
-
-#### When to Use
-- When more than one object may handle a request
-- When you want to issue a request to one of several objects without specifying the receiver explicitly
-- When the set of handlers should be specified dynamically
-- When you want to avoid coupling the sender to the receiver
-
-#### Run the Example
-```bash
-mvn compile
-mvn exec:java -Dexec.mainClass="com.tekup.ex4_ChainOfResponsibility.Main_ex4_ChainOfResponsibility"
-```
+© 2026 TEKUP - Behavioral Design Patterns TD3
 
